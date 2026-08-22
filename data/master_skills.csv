@@ -1,0 +1,19 @@
+skill_id,name,tier,vendor,locale,parent_id,status,aliases
+esco__001,Machine Learning,master,,en,,,ML
+esco__002,Deep Learning,master,,en,,,
+esco__003,Natural Language Processing,master,,en,,,NLP
+esco__004,Kubernetes,master,,en,,,K8s
+esco__005,Apache Spark,master,,en,,,Spark
+esco__006,PostgreSQL,master,,en,,,Postgres
+esco__007,Python,master,,en,,,
+esco__008,Java,master,,en,,,
+esco__009,Apache Kafka,master,,en,,,Kafka
+esco__010,Docker,master,,en,,,
+esco__011,Retrieval-Augmented Generation,master,,en,,,RAG
+esco__012,Large Language Models,master,,en,,,LLM|LLMs
+esco__013,Microservices,master,,en,,,
+esco__014,ETL,master,,en,,,
+esco__015,Data Engineering,master,,en,,,
+esco__016,AWS,master,,en,,,Amazon Web Services
+esco__017,Recommendation Systems,master,,en,,,Recommender Systems
+esco__018,Vector Databases,master,,en,,,Vector DB

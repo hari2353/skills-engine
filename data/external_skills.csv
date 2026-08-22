@@ -1,0 +1,9 @@
+skill_id,name,tier,vendor,locale,parent_id,status,aliases
+lc__1001,Generative AI Evaluation,external,lightcast_sim,en,,active,GenAI Evaluation
+lc__1002,Prompt Injection Defense,external,lightcast_sim,en,,active,
+lc__1003,Semantic Search Tuning,external,lightcast_sim,en,,active,
+lc__1004,Multi-Agent Orchestration,external,lightcast_sim,en,,active,A2A Orchestration
+lc__1005,Inference Cost Optimization,external,lightcast_sim,en,,active,
+bgt__2001,Labor Market Analytics,external,bgt_sim,en,,active,
+bgt__2002,Workforce Skills Mapping,external,bgt_sim,en,,active,
+bgt__2003,Talent Intelligence,external,bgt_sim,en,,active,

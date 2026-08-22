@@ -1,0 +1,7 @@
+skill_id,name,tier,vendor,locale,parent_id,status,aliases
+cus__3001,Skillmaster Sync,custom,tenant,en,,active,
+cus__3002,Transcript Chunking,custom,tenant,en,,active,
+cus__3003,Kubernetes,custom,tenant,en,,active,
+cus__3004,Content Gap Detection,custom,tenant,en,,active,
+cus__3005,Golden Baseline Regression,custom,tenant,en,,active,
+cus__3006,Multi-Tenant Provisioning,custom,tenant,en,,active,

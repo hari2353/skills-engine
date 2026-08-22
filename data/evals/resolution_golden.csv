@@ -1,0 +1,11 @@
+input_name,expected_skill_id
+Kubernetes,cus__3003
+K8s,esco__004
+ML,esco__001
+RAG,esco__011
+Postgres,esco__006
+LLMs,esco__012
+Spark,esco__005
+Talent Intelligence,bgt__2003
+Skillmaster Sync,cus__3001
+machine learning fundamentals,esco__001

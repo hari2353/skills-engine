@@ -1,0 +1,7 @@
+text,context_type,expected_canonical
+We need engineers with strong Python and Docker skills for our Kubernetes platform.,job_description,Python|Docker|Kubernetes
+Designing retrieval augmented generation pipelines with large language models on AWS.,job_definition,Retrieval-Augmented Generation|Large Language Models|AWS
+Experienced with NLP Spark and Kafka streaming platforms.,resume,Natural Language Processing|Apache Spark|Apache Kafka
+This course covers vector databases and recommendation systems basics.,content,Vector Databases|Recommendation Systems
+Daily tasks involve ETL development and microservices debugging.,task,ETL|Microservices
+Team uses Postgres and K8s daily for our internal tooling.,reflection,PostgreSQL|Kubernetes

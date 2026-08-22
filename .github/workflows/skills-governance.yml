@@ -1,0 +1,40 @@
+name: skills-governance
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONPATH: src
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m skills_engine.signals.cli --pages 3
+      - run: python -m skills_engine.lifecycle.cli --apply
+      - run: python -m skills_engine.evals.cli --min-f1 0.8 --min-accuracy 0.9
+      - uses: actions/upload-artifact@v4
+        with:
+          name: governance-audit
+          path: data/snapshots/
+          if-no-files-found: ignore
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          add-paths: |
+            data/market_signals.csv
+            data/snapshots/
+          commit-message: "chore(lifecycle): weekly skill governance snapshot"
+          title: "Weekly skills lifecycle report"
+          body: |
+            Automated weekly governance run.
+            - Labor-market signals ingested from public job-board APIs
+            - Half-life health scores recomputed (2.5y half-life policy)
+            - Emerging skill candidates proposed, stale skills deprecated
+            Human review = merge this PR. No manual taxonomy edits required.
+
