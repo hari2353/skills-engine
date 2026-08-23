@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from datetime import date
 
 from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..config import Settings
 from ..engine import SkillsEngine
@@ -12,18 +12,18 @@ from ..lifecycle.runner import LifecycleRunner
 
 
 class InferRequest(BaseModel):
-    text: str
-    context_type: str = ContextType.JOB_DESCRIPTION.value
-    locale: str = "en"
+    text: str = Field(min_length=1, max_length=20000)
+    context_type: str = Field(default=ContextType.JOB_DESCRIPTION.value, max_length=32)
+    locale: str = Field(default="en", max_length=16)
 
 
 class NormalizeRequest(BaseModel):
-    name: str
-    locale: str = "en"
+    name: str = Field(min_length=1, max_length=300)
+    locale: str = Field(default="en", max_length=16)
 
 
 class FeedbackRequest(BaseModel):
-    raw_input: str
+    raw_input: str = Field(min_length=1, max_length=300)
     accepted: bool
 
 
@@ -66,7 +66,7 @@ def create_app(data_dir=None, enable_usage_logging: bool = False) -> FastAPI:
         return engine.normalize(req.name, req.locale)
 
     @application.get("/v1/skills/search")
-    def search_skills(q: str = Query(..., min_length=1), k: int = Query(5, ge=1, le=50)) -> dict:
+    def search_skills(q: str = Query(..., min_length=1, max_length=300), k: int = Query(5, ge=1, le=50)) -> dict:
         return {"query": q, "results": engine.search(q, k)}
 
     @application.post("/v1/feedback")
@@ -108,3 +108,4 @@ def create_app(data_dir=None, enable_usage_logging: bool = False) -> FastAPI:
 
 
 app = create_app()
+

@@ -10,3 +10,7 @@ class Settings:
         self.llm_model = os.getenv("SKILLS_LLM_MODEL", "gpt-4o-mini")
         self.embedding_backend = os.getenv("SKILLS_EMBEDDING_BACKEND", "hashing")
         self.fuzzy_threshold = float(os.getenv("SKILLS_FUZZY_THRESHOLD", "0.65"))
+        self.rerank_backend = os.getenv("SKILLS_RERANK_BACKEND", "lexical")
+        self.rerank_candidates = int(os.getenv("SKILLS_RERANK_CANDIDATES", "8"))
+        self.rerank_vec_weight = float(os.getenv("SKILLS_RERANK_VEC_WEIGHT", "0.5"))
+        self.rerank_soft_threshold = float(os.getenv("SKILLS_RERANK_SOFT_THRESHOLD", "0.45"))

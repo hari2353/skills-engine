@@ -41,7 +41,7 @@ def test_alias_match_reports_provenance():
 def test_vector_fallback_within_custom_first():
     r = resolver().resolve("machine learning fundamentals")
     assert r.skill_id == "c1"
-    assert r.method == "vector"
+    assert r.method == "vector_reranked"
     assert r.confidence >= 0.6
     assert "similarity" in r.explanation
 
@@ -51,3 +51,4 @@ def test_unresolved_has_zero_confidence():
     assert r.skill_id is None
     assert r.method == "none"
     assert r.confidence == 0.0
+

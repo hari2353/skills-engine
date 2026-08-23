@@ -16,5 +16,11 @@ class VectorIndex:
             return []
         q = self.embedder.embed(query)
         sims = self.matrix @ q
-        order = np.argsort(-sims)[:k]
-        return [(self.keys[i][0], self.keys[i][1], float(sims[i])) for i in order]
+        n = len(sims)
+        k_eff = min(k, n)
+        if k_eff < n:
+            top = np.argpartition(-sims, k_eff - 1)[:k_eff]
+        else:
+            top = np.arange(n)
+        ordered = top[np.argsort(-sims[top])]
+        return [(self.keys[i][0], self.keys[i][1], float(sims[i])) for i in ordered]

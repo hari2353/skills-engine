@@ -8,6 +8,7 @@ from .inference.contexts import ContextType
 from .inference.extractors import RuleBasedExtractor, get_extractor
 from .normalization.normalizer import Normalizer
 from .resolution.resolver import SkillResolver
+from .rerank.reranker import get_reranker
 from .taxonomies.loader import TaxonomyStore
 from .taxonomies.models import SkillStatus
 from .text import fold
@@ -29,7 +30,15 @@ class SkillsEngine:
             if enable_ranker
             else None
         )
-        self.normalizer = Normalizer(self.store, self.embedder, settings.fuzzy_threshold)
+        self.normalizer = Normalizer(
+            self.store,
+            self.embedder,
+            settings.fuzzy_threshold,
+            reranker=get_reranker(settings.rerank_backend),
+            rerank_candidates=settings.rerank_candidates,
+            vec_weight=settings.rerank_vec_weight,
+            soft_threshold=settings.rerank_soft_threshold,
+        )
         self.resolver = SkillResolver(self.normalizer, self.ranker)
         self.extractor = get_extractor(
             list(self.store.skills.values()),
