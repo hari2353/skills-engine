@@ -10,6 +10,20 @@ and a self-learning feedback loop.
 
 > With AI skill half-lives at ~2.5 years (Deloitte), taxonomies curated by hand rot fast. This engine curates itself.
 
+![Architecture](docs/architecture.svg)
+
+## The full stack
+
+This engine is the core of a five-repo system:
+
+| Repo | Role |
+|---|---|
+| **skills-engine** (this repo) | taxonomy, inference, lifecycle governance, evals, self-learning |
+| [skills-mcp](https://github.com/hari2353/skills-mcp) | FastMCP server exposing the engine as MCP tools |
+| [skills-supervisor](https://github.com/hari2353/skills-supervisor) | supervisor chat agent (tool-calling) + A2A skills subagent + deterministic workflows + MCP registry |
+| [agent-registry](https://github.com/hari2353/agent-registry) | A2A-style agent discovery, heartbeats, talent briefs |
+| [auth-gateway](https://github.com/hari2353/auth-gateway) | JWT/OAuth2 with key rotation and cross-tenant isolation |
+
 ## Why this exists
 
 Enterprise talent platforms maintain skill taxonomies across three tiers. This project recreates that pattern
@@ -185,7 +199,8 @@ data/                sample taxonomy, signals, eval fixtures
 - [ ] ClickHouse HNSW index behind the same `VectorIndex` protocol (parity benchmark vs numpy)
 - [ ] Bedrock batch-inference mode for offline corpus tagging
 - [ ] Multi-locale alias packs + x-Language header precedence chain
-- [ ] A2A agent card exposure (see companion `skills-mcp` repo)
+- [x] A2A agent card exposure → shipped in [skills-supervisor](https://github.com/hari2353/skills-supervisor) (A2A skills subagent + supervisor chat agent)
+- [x] MCP tool exposure → shipped in [skills-mcp](https://github.com/hari2353/skills-mcp)
 
 ## License
 
