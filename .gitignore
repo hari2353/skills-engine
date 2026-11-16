@@ -8,3 +8,4 @@ data/usage_log.jsonl
 data/model/
 data/snapshots/
 data/evals/reports/
+src/skills_engine.egg-info/

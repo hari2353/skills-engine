@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..taxonomies.models import SkillStatus, SkillTier
 
@@ -12,6 +12,7 @@ class ResolvedSkill(BaseModel):
     confidence: float = 0.0
     method: str = "none"
     explanation: str = ""
+    hints: list[dict] = Field(default_factory=list)
 
 
 class SkillResolver:
@@ -36,4 +37,5 @@ class SkillResolver:
             confidence=confidence,
             method=r.method,
             explanation=explanation,
+            hints=r.hints,
         )

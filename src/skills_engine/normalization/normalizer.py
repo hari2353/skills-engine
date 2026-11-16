@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..rerank.reranker import RerankResult
 from ..store.vector_index import VectorIndex
@@ -18,6 +18,9 @@ class NormalizeResult(BaseModel):
     confidence: float = 0.0
     method: str = "none"
     explanation: str = "no match found in any tier"
+    # HireLayer-style "never guessed": when unresolved, nearest candidates
+    # (one per tier, best first, max 3) are surfaced as hints, not guesses
+    hints: list[dict] = Field(default_factory=list)
 
 
 class Normalizer:
@@ -95,7 +98,21 @@ class Normalizer:
         reranked = self._rerank_vector_candidates(name)
         if reranked is not None:
             return reranked
-        return NormalizeResult(input=name)
+        return NormalizeResult(input=name, hints=self._hints_for(name))
+
+    def _hints_for(self, name: str) -> list[dict]:
+        """Nearest searchable candidate per tier, best first, max 3."""
+        out: list[tuple[float, dict]] = []
+        for tier in TIER_ORDER:
+            idx = self.indexes.get(tier)
+            if not idx or not idx.keys:
+                continue
+            for skill_id, _surface, sim in idx.search(name, k=1):
+                out.append((sim, {"skill_id": skill_id,
+                                  "name": self.store.skills[skill_id].name,
+                                  "tier": tier.value, "score": round(sim, 4)}))
+        out.sort(key=lambda t: -t[0])
+        return [h for _, h in out[:3]]
 
     def _rerank_vector_candidates(self, name: str) -> NormalizeResult | None:
         candidates: list[tuple[SkillTier, str, str, float]] = []

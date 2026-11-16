@@ -129,7 +129,15 @@ curl -X POST localhost:8000/v1/skills/infer -H "Content-Type: application/json" 
 
 curl -X POST localhost:8000/v1/skills/normalize -d '{"name": "k8s"}' -H "Content-Type: application/json"
 
+curl -X POST localhost:8000/v1/skills/normalize -d '{"name": "zzqx wibble gibberish"}' -H "Content-Type: application/json"  # unresolved -> hints, never guessed
+
 curl "localhost:8000/v1/skills/search?q=kafka&k=3"
+
+curl "localhost:8000/v1/skills/esco__004/related?k=3"
+
+curl "localhost:8000/v1/taxonomy/version"   # snapshot date or "baseline"
+
+curl "localhost:8000/v1/taxonomy/changelog" # per-release added/removed/status_changed
 
 curl "localhost:8000/v1/lifecycle/report?today=2026-08-23"
 

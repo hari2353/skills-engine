@@ -1,5 +1,7 @@
+import csv
 import json
 from datetime import date
+from pathlib import Path
 
 from .config import Settings
 from .embedders.hashing import get_embedder
@@ -74,13 +76,62 @@ class SkillsEngine:
     def search(self, query: str, k: int = 5) -> list[dict]:
         return self.normalizer.search(query, k=k)
 
+    def related(self, skill_id: str, k: int = 5) -> dict:
+        """Nearest skills by embedding cosine over the global index (self excluded)."""
+        skill = self.store.skills.get(skill_id)
+        if skill is None:
+            raise KeyError(skill_id)
+        hits = [h for h in self.normalizer.global_index.search(skill.name, k=k + 1)
+                if h[0] != skill_id][:k]
+        return {"skill_id": skill_id, "related": [
+            {"skill_id": sid, "name": self.store.skills[sid].name,
+             "tier": self.store.skills[sid].tier.value, "score": round(score, 4)}
+            for sid, _surface, score in hits]}
+
+    # ---------- taxonomy versioning (Lightcast-style releases) ----------
+
+    def _snapshot_dirs(self) -> list[Path]:
+        snap = self.settings.data_dir / "snapshots"
+        return sorted(d for d in snap.iterdir() if d.is_dir()) if snap.exists() else []
+
+    def _snapshot_skills(self, d: Path) -> dict[str, str]:
+        out: dict[str, str] = {}
+        for f in d.glob("*.csv"):
+            with f.open(newline="", encoding="utf-8") as fh:
+                for row in csv.DictReader(fh):
+                    out[row["skill_id"]] = row.get("status", "")
+        return out
+
+    def taxonomy_version(self) -> str:
+        dirs = self._snapshot_dirs()
+        return dirs[-1].name if dirs else "baseline"
+
+    def changelog(self, limit: int = 10) -> dict:
+        """Diff consecutive snapshots: added / removed / status changes per release."""
+        dirs = self._snapshot_dirs()
+        releases = []
+        prev: dict[str, str] = {}
+        for d in dirs:
+            cur = self._snapshot_skills(d)
+            releases.append({
+                "date": d.name,
+                "added": sorted(set(cur) - set(prev))[:20],
+                "removed": sorted(set(prev) - set(cur))[:20],
+                "status_changed": sorted(k for k in set(cur) & set(prev)
+                                         if cur[k] != prev[k])[:20],
+            })
+            prev = cur
+        releases = releases[-limit:]
+        return {"releases": releases, "truncated": len(dirs) > limit}
+
     def stats(self) -> dict:
         by_tier: dict[str, int] = {}
         by_status: dict[str, int] = {}
         for s in self.store.skills.values():
             by_tier[s.tier.value] = by_tier.get(s.tier.value, 0) + 1
             by_status[s.status.value] = by_status.get(s.status.value, 0) + 1
-        return {"total_skills": len(self.store.skills), "by_tier": by_tier, "by_status": by_status}
+        return {"total_skills": len(self.store.skills), "by_tier": by_tier,
+                "by_status": by_status, "taxonomy_version": self.taxonomy_version()}
 
     def feedback(self, raw_input: str, accepted: bool) -> dict:
         if self.ranker is None:
