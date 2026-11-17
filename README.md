@@ -95,6 +95,12 @@ tells you which tier matched and why:
 Health score = `0.4 · recency + 0.4 · market_demand + 0.2 · content_coverage`
 where `recency = 0.5 ^ (days_since_last_use / 912)` — a **2.5-year half-life**.
 
+**Outcome-driven curation:** once ≥3 human accept/reject events exist for a skill
+(`POST /v1/feedback` → bandit log), rejections apply a multiplier
+`(1 − 0.3 · reject_rate)` on top of the health score — so a skill humans keep
+rejecting declines even while job postings still mention it. Nobody else in the
+market feeds human outcomes into lifecycle health.
+
 ```
 provisional ──(≥5 mentions)──▶ active ──(health < 0.35)──▶ declining ──(≥270d stale)──▶ deprecated ──(≥180d)──▶ archived
      ▲                                                                                          │
@@ -104,7 +110,11 @@ provisional ──(≥5 mentions)──▶ active ──(health < 0.35)──▶
 
 The scheduled workflow (`skills-governance.yml`) runs weekly: ingest postings from a public API → append usage
 events → recompute health → apply lifecycle actions → open a PR with the snapshot + audit JSON.
-**Humans merge; machines curate.**
+**Humans merge; machines curate.** Every apply writes a dated snapshot: `GET /v1/taxonomy/version`
+reports the release date (or `baseline`), `GET /v1/taxonomy/changelog` diffs consecutive
+snapshots (added/removed/status_changed per release), and export the taxonomy as agent-registry
+skills with `python -m skills_engine.lifecycle.cli --export-skills OUT_DIR` (one bounded
+`SKILL.md` per tier, frontmatter + capped table).
 
 Run it locally:
 

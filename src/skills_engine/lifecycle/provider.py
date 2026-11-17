@@ -38,6 +38,31 @@ def load_usage_signals(usage_log: Path) -> tuple[dict[str, SkillSignals], dict[s
     return by_skill, candidates
 
 
+def load_feedback_signals(path: Path) -> dict[str, SkillSignals]:
+    """Human accept/reject events from the bandit log, per resolved skill_id."""
+    by_skill: dict[str, SkillSignals] = {}
+    if not path.exists():
+        return by_skill
+    with path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            sid = event.get("skill_id")
+            if not sid:
+                continue
+            sig = by_skill.setdefault(sid, SkillSignals())
+            if event.get("accepted"):
+                sig.acceptances += 1
+            else:
+                sig.rejections += 1
+    return by_skill
+
+
 def load_market_signals(market_csv: Path) -> dict[str, dict[str, float]]:
     out: dict[str, dict[str, float]] = {}
     if not market_csv.exists():

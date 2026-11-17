@@ -24,6 +24,8 @@ class SkillSignals(BaseModel):
     last_seen: date | None = None
     market_demand: float = 0.0
     content_coverage: float = 0.0
+    acceptances: int = 0
+    rejections: int = 0
 
 
 class Candidate(BaseModel):
@@ -42,3 +44,7 @@ class LifecyclePolicy(BaseModel):
     recency_weight: float = 0.4
     demand_weight: float = 0.4
     coverage_weight: float = 0.2
+    # outcome-driven curation: human feedback (bandit accept/reject) applies a
+    # multiplier on top of the health score once enough samples exist
+    outcome_weight: float = 0.3
+    outcome_min_events: int = 3

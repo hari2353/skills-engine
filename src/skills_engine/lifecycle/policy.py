@@ -21,6 +21,16 @@ def health_score(signals: SkillSignals, policy, today: date) -> tuple[float, dic
         + policy.demand_weight * signals.market_demand
         + policy.coverage_weight * signals.content_coverage
     )
+    # outcome-driven curation: with enough human feedback, rejections pull the
+    # score down (neutral multiplier 1.0 when no/sparse feedback)
+    samples = signals.acceptances + signals.rejections
+    if samples >= policy.outcome_min_events:
+        reject_rate = signals.rejections / samples
+        multiplier = 1.0 - policy.outcome_weight * reject_rate
+        score *= multiplier
+    else:
+        reject_rate = 0.0
+        multiplier = 1.0
     metrics = {
         "health_score": round(score, 4),
         "recency_component": round(recency, 4),
@@ -28,6 +38,10 @@ def health_score(signals: SkillSignals, policy, today: date) -> tuple[float, dic
         "content_coverage": signals.content_coverage,
         "mentions": float(signals.mentions),
         "days_since_last_seen": float(days) if days is not None else -1.0,
+        "acceptances": float(signals.acceptances),
+        "rejections": float(signals.rejections),
+        "reject_rate": round(reject_rate, 4),
+        "outcome_multiplier": round(multiplier, 4),
     }
     return round(score, 4), metrics
 

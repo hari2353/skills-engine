@@ -7,7 +7,7 @@ from ..taxonomies.models import Skill, SkillStatus, SkillTier
 from ..text import fold
 from .models import LifecycleAction, LifecycleActionType
 from .policy import evaluate
-from .provider import load_market_signals, load_usage_signals, merge_signals
+from .provider import load_feedback_signals, load_market_signals, load_usage_signals, merge_signals
 
 
 class LifecycleRunner:
@@ -28,6 +28,13 @@ class LifecycleRunner:
                 candidates.setdefault(k, v)
         market = load_market_signals(self.data_dir / "market_signals.csv")
         merged = merge_signals(by_skill, market, self.store)
+        # outcome-driven curation: bandit accept/reject counts ride along
+        feedback = load_feedback_signals(self.data_dir / "model" / "feedback_log.jsonl")
+        for sid, fsig in feedback.items():
+            sig = merged.get(sid)
+            if sig is not None:
+                sig.acceptances = fsig.acceptances
+                sig.rejections = fsig.rejections
         return merged, candidates
 
     def report(self, policy, today: date | None = None) -> list[LifecycleAction]:

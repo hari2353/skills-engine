@@ -12,7 +12,7 @@ from .normalization.normalizer import Normalizer
 from .resolution.resolver import SkillResolver
 from .rerank.reranker import get_reranker
 from .taxonomies.loader import TaxonomyStore
-from .taxonomies.models import SkillStatus
+from .taxonomies.models import SkillStatus, SkillTier
 from .text import fold
 
 STALE_STATUSES = (SkillStatus.DEPRECATED, SkillStatus.ARCHIVED)
@@ -123,6 +123,35 @@ class SkillsEngine:
             prev = cur
         releases = releases[-limit:]
         return {"releases": releases, "truncated": len(dirs) > limit}
+
+    def export_skill_md(self, out_dir: Path, per_file_cap: int = 50) -> int:
+        """One bounded SKILL.md per taxonomy tier (agent-registry format):
+        frontmatter name/description, capped skill table, truncated note."""
+        out_dir.mkdir(parents=True, exist_ok=True)
+        version = self.taxonomy_version()
+        n_files = 0
+        for tier in SkillTier:
+            skills = sorted(self.store.by_tier.get(tier, []), key=lambda s: s.name.lower())
+            if not skills:
+                continue
+            d = out_dir / tier.value
+            d.mkdir(parents=True, exist_ok=True)
+            shown = skills[:per_file_cap]
+            rows = ["| skill_id | name | status | aliases |", "|---|---|---|---|"]
+            rows += [f"| {s.skill_id} | {s.name} | {s.status.value} | "
+                     f"{', '.join(s.aliases[:3])}{'…' if len(s.aliases) > 3 else ''} |"
+                     for s in shown]
+            truncated_note = (f"\nTruncated: showing {per_file_cap} of {len(skills)} skills.\n"
+                              if len(skills) > per_file_cap else "")
+            (d / "SKILL.md").write_text(
+                "---\n"
+                f"name: skills-engine-{tier.value}\n"
+                f"description: \"{len(skills)} {tier.value}-tier skills from the Skills "
+                f"Intelligence Engine taxonomy (version {version})\"\n"
+                "---\n\n" + "\n".join(rows) + "\n" + truncated_note,
+                encoding="utf-8")
+            n_files += 1
+        return n_files
 
     def stats(self) -> dict:
         by_tier: dict[str, int] = {}

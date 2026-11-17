@@ -12,6 +12,8 @@ def main() -> None:
     parser.add_argument("--data-dir", type=Path, default=None)
     parser.add_argument("--today", type=str, default=None)
     parser.add_argument("--apply", action="store_true", help="apply actions and write a snapshot")
+    parser.add_argument("--export-skills", type=Path, default=None, metavar="OUT_DIR",
+                        help="write one bounded SKILL.md per taxonomy tier (agent registries)")
     args = parser.parse_args()
 
     import sys
@@ -23,6 +25,10 @@ def main() -> None:
 
     data_dir = args.data_dir or Settings().data_dir
     engine = SkillsEngine(Settings(data_dir=data_dir))
+    if args.export_skills:
+        n = engine.export_skill_md(args.export_skills)
+        print(json.dumps({"exported": n, "dir": str(args.export_skills)}, indent=2))
+        return
     runner = LifecycleRunner(engine.store, engine.normalizer, data_dir)
     today = date.fromisoformat(args.today) if args.today else date.today()
     policy = LifecyclePolicy()
