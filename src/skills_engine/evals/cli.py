@@ -15,6 +15,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run golden-baseline evaluation and gate on F1")
     parser.add_argument("--data-dir", type=Path, default=None)
     parser.add_argument("--min-f1", type=float, default=0.8)
+    parser.add_argument("--min-lenient-f1", type=float, default=0.8)
     parser.add_argument("--min-accuracy", type=float, default=0.9)
     args = parser.parse_args()
 
@@ -30,14 +31,20 @@ def main() -> None:
                 "extraction_f1": extraction["f1"],
                 "extraction_precision": extraction["precision"],
                 "extraction_recall": extraction["recall"],
+                "lenient_f1": extraction["lenient_f1"],
                 "resolution_accuracy": resolution["accuracy"],
                 "gate_min_f1": args.min_f1,
+                "gate_min_lenient_f1": args.min_lenient_f1,
                 "gate_min_accuracy": args.min_accuracy,
             },
             indent=2,
         )
     )
-    failed = extraction["f1"] < args.min_f1 or resolution["accuracy"] < args.min_accuracy
+    failed = (
+        extraction["f1"] < args.min_f1
+        or extraction["lenient_f1"] < args.min_lenient_f1
+        or resolution["accuracy"] < args.min_accuracy
+    )
     sys.exit(1 if failed else 0)
 
 

@@ -145,6 +145,8 @@ curl "localhost:8000/v1/skills/search?q=kafka&k=3"
 
 curl "localhost:8000/v1/skills/esco__004/related?k=3"
 
+curl "localhost:8000/v1/skills/esco__004/market"  # demand/coverage + 30d usage trend (rising/falling/flat/untested)
+
 curl "localhost:8000/v1/taxonomy/version"   # snapshot date or "baseline"
 
 curl "localhost:8000/v1/taxonomy/changelog" # per-release added/removed/status_changed
@@ -173,12 +175,29 @@ Embeddings default to a dependency-free hashing embedder; set
 ## Evaluation as a CI gate
 
 ```bash
-python -m skills_engine.evals.cli --min-f1 0.8 --min-accuracy 0.9
+python -m skills_engine.evals.cli --min-f1 0.8 --min-lenient-f1 0.8 --min-accuracy 0.9
 ```
 
 `data/evals/golden_baseline.csv` pins extraction behavior; `resolution_golden.csv` pins tier-precedence behavior
 (including the tricky cases: alias-only master hits vs same-name custom entries). Reports land in
 `data/evals/reports/latest.json`. CI fails below thresholds — the same discipline as a 2,000-row enterprise baseline.
+
+Alongside strict F1, the gate reports a **lenient F1**: an expected name counts as matched when the engine produced
+the same canonical skill under any name or alias (so `K8s` ↔ `Kubernetes`, or a custom-tier duplicate of a master
+skill, no longer reads as a miss while still being reported separately).
+
+## Swappable master tier: O*NET pack
+
+The master tier is vendor-neutral CSV (`master_skills.csv`). A real 9k-skill O*NET pack is included under
+`data/packs/onet/` — point a second engine instance at it to swap taxonomies:
+
+```bash
+python scripts/build_onet_pack.py --src software_skills.csv --out data/packs/onet  # regenerate
+```
+
+Download the source from the [O*NET database page](https://www.onetcenter.org/database.html) ("Software Skills" CSV,
+CC BY 4.0). The pack keeps the hierarchy: each workplace example (e.g. *Ruby on Rails*) carries `parent_id` of its
+category (*Web platform development software*), and `normalize` explanations roll up to the broader skill.
 
 ## Self-learning re-ranker
 

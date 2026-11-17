@@ -182,3 +182,118 @@ def test_export_skill_md_caps_rows(tmp_path):
     assert "truncated" in text.lower()
     assert "| cus__cap59 |" not in text
     assert "| cus__cap49 |" in text
+
+
+# ---------- 6. broader-skill hierarchy roll-up (parent_id already in schema) ----------
+
+def test_normalize_explains_broader_skill(tmp_path):
+    eng = _fresh_engine(tmp_path)
+    dd = eng.settings.data_dir
+    # give Kubernetes (esco__004) a broader parent in the shipped data
+    import re as _re
+    p = dd / "master_skills.csv"
+    rows = p.read_text().splitlines()
+    hdr = rows[0].split(",")
+    i_id, i_par = hdr.index("skill_id"), hdr.index("parent_id")
+    out = [rows[0]]
+    for r in rows[1:]:
+        cells = r.split(",")
+        if cells[i_id] == "esco__004":
+            cells[i_par] = "esco__007"
+            r = ",".join(cells)
+        out.append(r)
+    p.write_text("\n".join(out) + "\n")
+    from skills_engine.config import Settings
+    from skills_engine.engine import SkillsEngine
+
+    eng2 = SkillsEngine(Settings(data_dir=dd), enable_ranker=False)
+    r = eng2.normalize("k8s")
+    assert r["skill_id"] == "esco__004"
+    assert "broader skill" in r["explanation"]
+    assert "esco__007" in r["explanation"]
+
+
+# ---------- 7. per-skill market endpoint (demand + capped-window trend) ----------
+
+def test_market_signal_per_skill(tmp_path):
+    import json as _json
+
+    eng = _fresh_engine(tmp_path)
+    dd = eng.settings.data_dir
+    (dd / "usage_log.jsonl").write_text(
+        "\n".join(_json.dumps({"ts": ts, "type": "resolved", "skill_id": "esco__004"})
+                  for ts in ("2026-11-01", "2026-11-10", "2026-10-05", "2026-05-01")) + "\n")
+    out = eng.market("esco__004", today=date(2026, 11, 17))
+    assert out["skill_id"] == "esco__004"
+    assert out["name"] == eng.store.skills["esco__004"].name
+    assert out["demand"] > 0  # shipped market_signals.csv has esco__004
+    assert out["mentions"] == 4
+    assert out["last_seen"] == "2026-11-10"
+    assert out["trend"] == "rising"  # 2 recent vs 1 older event
+    from skills_engine.config import Settings
+    from skills_engine.engine import SkillsEngine
+
+    eng2 = SkillsEngine(Settings(data_dir=dd), enable_ranker=False)
+    try:
+        eng2.market("nope__999")
+        raise AssertionError("market() must raise KeyError for unknown skill")
+    except KeyError:
+        pass
+
+
+def test_market_endpoint(client):
+    body = client.get("/v1/skills/esco__004/market").json()
+    assert {"skill_id", "name", "demand", "coverage", "mentions", "last_seen", "trend"} <= set(body)
+    assert client.get("/v1/skills/nope__999/market").status_code == 404
+
+
+# ---------- 8. lenient-F1 alongside strict F1 in the golden gate ----------
+
+def test_extraction_eval_lenient_f1(tmp_path):
+    from skills_engine.evals.runner import run_extraction_eval
+
+    golden = tmp_path / "golden.csv"
+    golden.write_text(
+        "text,context_type,expected_canonical\n"
+        "Hiring engineers with Python experience.,job_description,Python\n"
+        "Deploy on k8s clusters.,job_description,K8s\n",
+        encoding="utf-8")
+    res = run_extraction_eval(_fresh_engine(tmp_path), golden)
+    assert 0 < res["lenient_f1"] <= 1.0
+    assert res["lenient_f1"] >= res["f1"]  # alias expansion can only help
+    k8s_row = next(r for r in res["rows"] if "k8s" in r["text"])
+    assert k8s_row["match"] is False          # strict: K8s != Kubernetes
+    assert k8s_row["lenient_match"] is True   # lenient: k8s is an alias of Kubernetes
+
+
+def test_evals_cli_reports_lenient(engine_fixture, tmp_path, capsys):
+    from skills_engine.evals.cli import main as evals_main
+    import sys as _sys
+
+    argv = _sys.argv
+    _sys.argv = ["evals", "--data-dir", str(engine_fixture.settings.data_dir)]
+    try:
+        evals_main()
+    except SystemExit:
+        pass
+    finally:
+        _sys.argv = argv
+    out = capsys.readouterr().out
+    assert "lenient_f1" in out
+
+
+# ---------- 9. O*NET master pack (swappable master tier, real data) ----------
+
+def test_onet_master_pack_loads():
+    from skills_engine.config import Settings
+    from skills_engine.engine import SkillsEngine
+    from skills_engine.taxonomies.models import SkillTier
+
+    pack = Path(__file__).resolve().parents[1] / "data" / "packs" / "onet"
+    assert (pack / "master_skills.csv").exists()
+    eng = SkillsEngine(Settings(data_dir=pack), enable_ranker=False)
+    assert len(eng.store.skills) >= 200
+    assert all(s.tier == SkillTier.MASTER for s in eng.store.skills.values())
+    onet = eng.normalize("Ruby on Rails")
+    assert onet["skill_id"] is not None
+    assert onet["tier"] == "master"

@@ -28,6 +28,11 @@ class SkillResolver:
             adjusted = self.ranker.score(r)
             confidence = round(0.5 * confidence + 0.5 * adjusted, 4)
             explanation += f"; bandit-adjusted confidence {confidence} (model p={adjusted:.4f})"
+        if r.matched_skill_id is not None:
+            skill = self.normalizer.store.skills[r.matched_skill_id]
+            parent = self.normalizer.store.skills.get(skill.parent_id or "")
+            if parent is not None:
+                explanation += f"; broader skill: {parent.name} ({parent.skill_id})"
         return ResolvedSkill(
             raw_input=name,
             skill_id=r.matched_skill_id,

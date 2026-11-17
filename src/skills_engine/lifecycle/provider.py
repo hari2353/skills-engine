@@ -38,6 +38,27 @@ def load_usage_signals(usage_log: Path) -> tuple[dict[str, SkillSignals], dict[s
     return by_skill, candidates
 
 
+def load_skill_events(usage_log: Path, skill_id: str) -> list[date]:
+    """Resolved-event dates for one skill, for capped-window trend analysis."""
+    events: list[date] = []
+    if not usage_log.exists():
+        return events
+    with usage_log.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if event.get("type") == "resolved" and event.get("skill_id") == skill_id:
+                day = _parse_date(event.get("ts"))
+                if day:
+                    events.append(day)
+    return events
+
+
 def load_feedback_signals(path: Path) -> dict[str, SkillSignals]:
     """Human accept/reject events from the bandit log, per resolved skill_id."""
     by_skill: dict[str, SkillSignals] = {}

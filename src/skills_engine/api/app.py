@@ -35,7 +35,7 @@ def create_app(data_dir=None, enable_usage_logging: bool = False) -> FastAPI:
     async def lifespan(_: FastAPI):
         yield
 
-    application = FastAPI(title="Skills Intelligence Engine", version="0.2.0", lifespan=lifespan)
+    application = FastAPI(title="Skills Intelligence Engine", version="0.3.0", lifespan=lifespan)
 
     @application.middleware("http")
     async def security_headers(request, call_next):
@@ -73,6 +73,13 @@ def create_app(data_dir=None, enable_usage_logging: bool = False) -> FastAPI:
     def related_skills(skill_id: str, k: int = Query(5, ge=1, le=20)) -> dict:
         try:
             return engine.related(skill_id, k)
+        except KeyError:
+            raise HTTPException(status_code=404, detail=f"unknown skill '{skill_id}'")
+
+    @application.get("/v1/skills/{skill_id}/market")
+    def skill_market(skill_id: str) -> dict:
+        try:
+            return engine.market(skill_id)
         except KeyError:
             raise HTTPException(status_code=404, detail=f"unknown skill '{skill_id}'")
 

@@ -1,6 +1,6 @@
 import csv
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from .config import Settings
@@ -8,6 +8,7 @@ from .embedders.hashing import get_embedder
 from .feedback.bandit import FeedbackBandit
 from .inference.contexts import ContextType
 from .inference.extractors import RuleBasedExtractor, get_extractor
+from .lifecycle.provider import load_market_signals, load_skill_events
 from .normalization.normalizer import Normalizer
 from .resolution.resolver import SkillResolver
 from .rerank.reranker import get_reranker
@@ -152,6 +153,33 @@ class SkillsEngine:
                 encoding="utf-8")
             n_files += 1
         return n_files
+
+    def market(self, skill_id: str, window_days: int = 30, today: date | None = None) -> dict:
+        """Per-skill market view: demand/coverage from market signals plus a
+        capped-window usage trend (recent vs prior window of window_days)."""
+        skill = self.store.skills.get(skill_id)
+        if skill is None:
+            raise KeyError(skill_id)
+        today = today or date.today()
+        events = load_skill_events(self.settings.data_dir / "usage_log.jsonl", skill_id)
+        if not events:
+            events = load_skill_events(self.settings.data_dir / "usage_signals.jsonl", skill_id)
+        recent_floor = today - timedelta(days=window_days)
+        prior_floor = recent_floor - timedelta(days=window_days)
+        recent = sum(1 for d in events if recent_floor <= d <= today)
+        prior = sum(1 for d in events if prior_floor <= d < recent_floor)
+        trend = ("rising" if recent > prior else "falling" if recent < prior else "flat") \
+            if recent or prior else "untested"
+        row = load_market_signals(self.settings.data_dir / "market_signals.csv").get(skill_id) or {}
+        return {
+            "skill_id": skill_id,
+            "name": skill.name,
+            "demand": row.get("demand", 0.0),
+            "coverage": row.get("coverage", 0.0),
+            "mentions": len(events),
+            "last_seen": max(events).isoformat() if events else None,
+            "trend": trend,
+        }
 
     def stats(self) -> dict:
         by_tier: dict[str, int] = {}
