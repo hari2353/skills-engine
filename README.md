@@ -248,6 +248,20 @@ and hit/miss/eviction stats. `BudgetedRouter(per_tenant_limit)` counts calls
 per tenant and serves a deterministic fallback once exhausted, so a runaway
 tenant cannot spend the shared budget. Exceptions are never cached.
 
+## Coreset selection (Harvard Edge DataPerf cross-pollination)
+
+`skills_engine.selection` picks a budgeted subset of examples with proportional
+group coverage and a seeded shuffle, plus a per-group coverage report:
+
+```python
+from skills_engine.selection import coreset_report, select_coreset
+
+selected = select_coreset(items, 50, group_key=lambda x: x["skill"], seed=42)
+coreset_report(selected, items, group_key=lambda x: x["skill"])
+```
+
+No LLM or embedding dependency; selection is deterministic and reproducible.
+
 ## License
 
 MIT
