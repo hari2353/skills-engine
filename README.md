@@ -239,6 +239,15 @@ data/                sample taxonomy, signals, eval fixtures
 - [x] A2A agent card exposure → shipped in [skills-supervisor](https://github.com/hari2353/skills-supervisor) (A2A skills subagent + supervisor chat agent)
 - [x] MCP tool exposure → shipped in [skills-mcp](https://github.com/hari2353/skills-mcp)
 
+## Query cache + budget kill-switch
+
+`skills_engine.cache` adds a reusable gateway layer with no model on the cache
+path. `SemanticCache` keys on `(tenant, normalized query)` — lowercase, strip
+punctuation, sort unique tokens — with TTL (`clock` injectable), LRU eviction
+and hit/miss/eviction stats. `BudgetedRouter(per_tenant_limit)` counts calls
+per tenant and serves a deterministic fallback once exhausted, so a runaway
+tenant cannot spend the shared budget. Exceptions are never cached.
+
 ## License
 
 MIT
