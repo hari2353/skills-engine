@@ -262,6 +262,6 @@ coreset_report(selected, items, group_key=lambda x: x["skill"])
 
 No LLM or embedding dependency; selection is deterministic and reproducible.
 
-## License
+## Active learning (DataPerf cross-pollination)\n\n`skills_engine.active` provides entropy, uncertainty sampling and margin\nsampling so a labeling budget goes where it buys the most information.\n\n## License
 
 MIT
