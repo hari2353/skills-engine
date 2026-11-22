@@ -262,6 +262,12 @@ coreset_report(selected, items, group_key=lambda x: x["skill"])
 
 No LLM or embedding dependency; selection is deterministic and reproducible.
 
-## Active learning (DataPerf cross-pollination)\n\n`skills_engine.active` provides entropy, uncertainty sampling and margin\nsampling so a labeling budget goes where it buys the most information.\n\n## License
+## Active learning (DataPerf cross-pollination)\n\n`skills_engine.active` provides entropy, uncertainty sampling and margin\nsampling so a labeling budget goes where it buys the most information.\n\n## Agent skill manifests (Databricks agent-skills cross-pollination)
+
+`skills_engine.manifest.parse_manifest` validates and normalizes a skill
+manifest (name, description, semver version, inputs, outputs, tools,
+entrypoint).
+
+## License
 
 MIT
