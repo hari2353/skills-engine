@@ -87,9 +87,7 @@ def coreset_report(
             str(g): {
                 "available": all_counts[g],
                 "selected": selected_counts[g],
-                "coverage": round(
-                    selected_counts[g] / all_counts[g], 4
-                ) if all_counts[g] else 0.0,
+                "coverage": round(selected_counts[g] / all_counts[g], 4) if all_counts[g] else 0.0,
             }
             for g in groups
         },

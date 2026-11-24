@@ -4,6 +4,7 @@ Uncertainty sampling: pick the examples the current model is least sure
 about, so a labeling budget goes where it buys the most information.
 Pure Python, no ML framework.
 """
+
 from __future__ import annotations
 
 import math

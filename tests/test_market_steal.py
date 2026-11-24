@@ -4,6 +4,7 @@
 2. taxonomy version + snapshot changelog (Lightcast versioned releases)
 3. related-skills endpoint (Lightcast /related via the existing vector index)
 """
+
 import shutil
 from datetime import date
 from pathlib import Path
@@ -22,6 +23,7 @@ def _fresh_engine(tmp_path):
 
 # ---------- 1. unresolved-with-hints ----------
 
+
 def test_normalize_unresolved_carries_hints(engine_fixture):
     r = engine_fixture.normalize("zzqx wibble machine learning gibberish")
     assert r["skill_id"] is None
@@ -37,13 +39,13 @@ def test_normalize_resolved_has_no_hints(engine_fixture):
 
 
 def test_normalize_endpoint_hints_shape(client):
-    body = client.post("/v1/skills/normalize",
-                       json={"name": "zzqx wibble machine gibberish"}).json()
+    body = client.post("/v1/skills/normalize", json={"name": "zzqx wibble machine gibberish"}).json()
     assert body["skill_id"] is None
     assert isinstance(body.get("hints"), list) and body["hints"]
 
 
 # ---------- 2. related-skills endpoint ----------
+
 
 def test_related_skills_excludes_self_and_sorts(engine_fixture):
     out = engine_fixture.related("esco__004", k=3)
@@ -65,6 +67,7 @@ def test_related_endpoint_and_unknown_id(client):
 
 # ---------- 3. taxonomy version + snapshot changelog ----------
 
+
 def _lifecycle_runner(engine, data_dir):
     from skills_engine.lifecycle.models import LifecyclePolicy
     from skills_engine.lifecycle.runner import LifecycleRunner
@@ -81,8 +84,9 @@ def test_taxonomy_version_baseline_then_snapshot(tmp_path):
     runner.apply(runner.report(policy, date(2026, 8, 23)), policy, date(2026, 8, 23))
     assert eng.taxonomy_version() == "2026-08-23"
     # change the store, snapshot again -> version moves, changelog shows the delta
-    eng.store.add_or_update(Skill(skill_id="cus__reltest", name="Vector Databases",
-                                  tier=SkillTier.CUSTOM, status=SkillStatus.ACTIVE))
+    eng.store.add_or_update(
+        Skill(skill_id="cus__reltest", name="Vector Databases", tier=SkillTier.CUSTOM, status=SkillStatus.ACTIVE)
+    )
     runner.apply(runner.report(policy, date(2026, 8, 24)), policy, date(2026, 8, 24))
     assert eng.taxonomy_version() == "2026-08-24"
     log = eng.changelog()
@@ -107,6 +111,7 @@ def test_stats_includes_taxonomy_version(client):
 
 
 # ---------- 4. bandit rejections -> lifecycle health (outcome curation) ----------
+
 
 def test_health_score_neutral_without_feedback():
     from skills_engine.lifecycle.models import LifecyclePolicy, SkillSignals
@@ -138,14 +143,20 @@ def test_rejections_drive_declining_action(tmp_path):
     eng = _fresh_engine(tmp_path)
     dd = eng.settings.data_dir
     (dd / "usage_log.jsonl").write_text(
-        "\n".join(_json.dumps({"ts": "2026-08-20", "type": "resolved", "skill_id": "cus__3002"})
-                  for _ in range(4)) + "\n")
+        "\n".join(_json.dumps({"ts": "2026-08-20", "type": "resolved", "skill_id": "cus__3002"}) for _ in range(4))
+        + "\n"
+    )
     model = dd / "model"
     model.mkdir(parents=True, exist_ok=True)
     (model / "feedback_log.jsonl").write_text(
-        "\n".join(_json.dumps({"ts": "2026-08-21", "raw_input": "Transcript Chunking",
-                               "skill_id": "cus__3002", "accepted": False})
-                  for _ in range(6)) + "\n")
+        "\n".join(
+            _json.dumps(
+                {"ts": "2026-08-21", "raw_input": "Transcript Chunking", "skill_id": "cus__3002", "accepted": False}
+            )
+            for _ in range(6)
+        )
+        + "\n"
+    )
     runner, policy = _lifecycle_runner(eng, dd)
     actions = runner.report(policy, date(2026, 8, 23))
     act = next((a for a in actions if a.target == "cus__3002"), None)
@@ -155,6 +166,7 @@ def test_rejections_drive_declining_action(tmp_path):
 
 
 # ---------- 5. SKILL.md export for agent registries ----------
+
 
 def test_export_skill_md_per_tier(tmp_path):
     eng = _fresh_engine(tmp_path)
@@ -174,8 +186,9 @@ def test_export_skill_md_caps_rows(tmp_path):
 
     eng = _fresh_engine(tmp_path)
     for i in range(60):
-        eng.store.add_or_update(Skill(skill_id=f"cus__cap{i}", name=f"Cap Skill {i}",
-                                      tier=SkillTier.CUSTOM, status=SkillStatus.ACTIVE))
+        eng.store.add_or_update(
+            Skill(skill_id=f"cus__cap{i}", name=f"Cap Skill {i}", tier=SkillTier.CUSTOM, status=SkillStatus.ACTIVE)
+        )
     out = tmp_path / "cap-md"
     eng.export_skill_md(out, per_file_cap=50)
     text = (out / "custom" / "SKILL.md").read_text()
@@ -186,11 +199,13 @@ def test_export_skill_md_caps_rows(tmp_path):
 
 # ---------- 6. broader-skill hierarchy roll-up (parent_id already in schema) ----------
 
+
 def test_normalize_explains_broader_skill(tmp_path):
     eng = _fresh_engine(tmp_path)
     dd = eng.settings.data_dir
     # give Kubernetes (esco__004) a broader parent in the shipped data
     import re as _re
+
     p = dd / "master_skills.csv"
     rows = p.read_text().splitlines()
     hdr = rows[0].split(",")
@@ -215,14 +230,19 @@ def test_normalize_explains_broader_skill(tmp_path):
 
 # ---------- 7. per-skill market endpoint (demand + capped-window trend) ----------
 
+
 def test_market_signal_per_skill(tmp_path):
     import json as _json
 
     eng = _fresh_engine(tmp_path)
     dd = eng.settings.data_dir
     (dd / "usage_log.jsonl").write_text(
-        "\n".join(_json.dumps({"ts": ts, "type": "resolved", "skill_id": "esco__004"})
-                  for ts in ("2026-11-01", "2026-11-10", "2026-10-05", "2026-05-01")) + "\n")
+        "\n".join(
+            _json.dumps({"ts": ts, "type": "resolved", "skill_id": "esco__004"})
+            for ts in ("2026-11-01", "2026-11-10", "2026-10-05", "2026-05-01")
+        )
+        + "\n"
+    )
     out = eng.market("esco__004", today=date(2026, 11, 17))
     assert out["skill_id"] == "esco__004"
     assert out["name"] == eng.store.skills["esco__004"].name
@@ -249,6 +269,7 @@ def test_market_endpoint(client):
 
 # ---------- 8. lenient-F1 alongside strict F1 in the golden gate ----------
 
+
 def test_extraction_eval_lenient_f1(tmp_path):
     from skills_engine.evals.runner import run_extraction_eval
 
@@ -257,13 +278,14 @@ def test_extraction_eval_lenient_f1(tmp_path):
         "text,context_type,expected_canonical\n"
         "Hiring engineers with Python experience.,job_description,Python\n"
         "Deploy on k8s clusters.,job_description,K8s\n",
-        encoding="utf-8")
+        encoding="utf-8",
+    )
     res = run_extraction_eval(_fresh_engine(tmp_path), golden)
     assert 0 < res["lenient_f1"] <= 1.0
     assert res["lenient_f1"] >= res["f1"]  # alias expansion can only help
     k8s_row = next(r for r in res["rows"] if "k8s" in r["text"])
-    assert k8s_row["match"] is False          # strict: K8s != Kubernetes
-    assert k8s_row["lenient_match"] is True   # lenient: k8s is an alias of Kubernetes
+    assert k8s_row["match"] is False  # strict: K8s != Kubernetes
+    assert k8s_row["lenient_match"] is True  # lenient: k8s is an alias of Kubernetes
 
 
 def test_evals_cli_reports_lenient(engine_fixture, tmp_path, capsys):
@@ -283,6 +305,7 @@ def test_evals_cli_reports_lenient(engine_fixture, tmp_path, capsys):
 
 
 # ---------- 9. O*NET master pack (swappable master tier, real data) ----------
+
 
 def test_onet_master_pack_loads():
     from skills_engine.config import Settings

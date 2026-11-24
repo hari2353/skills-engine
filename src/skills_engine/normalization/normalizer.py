@@ -24,8 +24,16 @@ class NormalizeResult(BaseModel):
 
 
 class Normalizer:
-    def __init__(self, store, embedder, fuzzy_threshold: float = 0.65, reranker=None,
-                 rerank_candidates: int = 8, vec_weight: float = 0.5, soft_threshold: float = 0.45) -> None:
+    def __init__(
+        self,
+        store,
+        embedder,
+        fuzzy_threshold: float = 0.65,
+        reranker=None,
+        rerank_candidates: int = 8,
+        vec_weight: float = 0.5,
+        soft_threshold: float = 0.45,
+    ) -> None:
         from ..rerank.reranker import LexicalReranker
 
         self.store = store
@@ -108,9 +116,17 @@ class Normalizer:
             if not idx or not idx.keys:
                 continue
             for skill_id, _surface, sim in idx.search(name, k=1):
-                out.append((sim, {"skill_id": skill_id,
-                                  "name": self.store.skills[skill_id].name,
-                                  "tier": tier.value, "score": round(sim, 4)}))
+                out.append(
+                    (
+                        sim,
+                        {
+                            "skill_id": skill_id,
+                            "name": self.store.skills[skill_id].name,
+                            "tier": tier.value,
+                            "score": round(sim, 4),
+                        },
+                    )
+                )
         out.sort(key=lambda t: -t[0])
         return [h for _, h in out[:3]]
 
@@ -148,7 +164,9 @@ class Normalizer:
         parts = [f"vector similarity {best.vector_sim:.3f}"]
         if self.reranker is not None:
             parts.append(f"reranker {best.rerank_score:.3f}")
-        parts.append(f"blended {best.blended:.3f} >= threshold {self.fuzzy_threshold} against '{best.surface}' in {best.tier} tier")
+        parts.append(
+            f"blended {best.blended:.3f} >= threshold {self.fuzzy_threshold} against '{best.surface}' in {best.tier} tier"
+        )
         return NormalizeResult(
             input=name,
             matched_skill_id=best.skill_id,

@@ -2,11 +2,7 @@ from skills_engine.selection import coreset_report, select_coreset
 
 
 def make_items():
-    return [
-        {"id": f"a{i}", "group": "A"} for i in range(6)
-    ] + [
-        {"id": f"b{i}", "group": "B"} for i in range(2)
-    ]
+    return [{"id": f"a{i}", "group": "A"} for i in range(6)] + [{"id": f"b{i}", "group": "B"} for i in range(2)]
 
 
 def test_budget_zero_returns_empty():

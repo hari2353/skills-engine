@@ -23,8 +23,9 @@ def normalize_key(text: str) -> str:
 
 
 class SemanticCache:
-    def __init__(self, max_entries: int = 256, ttl_seconds: float = 3600,
-                 clock: Callable[[], float] = time.time) -> None:
+    def __init__(
+        self, max_entries: int = 256, ttl_seconds: float = 3600, clock: Callable[[], float] = time.time
+    ) -> None:
         if max_entries < 1:
             raise ValueError("max_entries must be >= 1")
         if ttl_seconds <= 0:

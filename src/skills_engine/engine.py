@@ -50,7 +50,14 @@ class SkillsEngine:
             settings.llm_model,
         )
 
-    def infer(self, text: str, context_type: ContextType = ContextType.JOB_DESCRIPTION, locale: str = "en", log_usage: bool = False, emit_unknown: bool = False) -> dict:
+    def infer(
+        self,
+        text: str,
+        context_type: ContextType = ContextType.JOB_DESCRIPTION,
+        locale: str = "en",
+        log_usage: bool = False,
+        emit_unknown: bool = False,
+    ) -> dict:
         degraded = False
         try:
             raw_skills = self.extractor.extract(text, context_type, emit_unknown=emit_unknown)
@@ -82,12 +89,19 @@ class SkillsEngine:
         skill = self.store.skills.get(skill_id)
         if skill is None:
             raise KeyError(skill_id)
-        hits = [h for h in self.normalizer.global_index.search(skill.name, k=k + 1)
-                if h[0] != skill_id][:k]
-        return {"skill_id": skill_id, "related": [
-            {"skill_id": sid, "name": self.store.skills[sid].name,
-             "tier": self.store.skills[sid].tier.value, "score": round(score, 4)}
-            for sid, _surface, score in hits]}
+        hits = [h for h in self.normalizer.global_index.search(skill.name, k=k + 1) if h[0] != skill_id][:k]
+        return {
+            "skill_id": skill_id,
+            "related": [
+                {
+                    "skill_id": sid,
+                    "name": self.store.skills[sid].name,
+                    "tier": self.store.skills[sid].tier.value,
+                    "score": round(score, 4),
+                }
+                for sid, _surface, score in hits
+            ],
+        }
 
     # ---------- taxonomy versioning (Lightcast-style releases) ----------
 
@@ -114,13 +128,14 @@ class SkillsEngine:
         prev: dict[str, str] = {}
         for d in dirs:
             cur = self._snapshot_skills(d)
-            releases.append({
-                "date": d.name,
-                "added": sorted(set(cur) - set(prev))[:20],
-                "removed": sorted(set(prev) - set(cur))[:20],
-                "status_changed": sorted(k for k in set(cur) & set(prev)
-                                         if cur[k] != prev[k])[:20],
-            })
+            releases.append(
+                {
+                    "date": d.name,
+                    "added": sorted(set(cur) - set(prev))[:20],
+                    "removed": sorted(set(prev) - set(cur))[:20],
+                    "status_changed": sorted(k for k in set(cur) & set(prev) if cur[k] != prev[k])[:20],
+                }
+            )
             prev = cur
         releases = releases[-limit:]
         return {"releases": releases, "truncated": len(dirs) > limit}
@@ -139,18 +154,22 @@ class SkillsEngine:
             d.mkdir(parents=True, exist_ok=True)
             shown = skills[:per_file_cap]
             rows = ["| skill_id | name | status | aliases |", "|---|---|---|---|"]
-            rows += [f"| {s.skill_id} | {s.name} | {s.status.value} | "
-                     f"{', '.join(s.aliases[:3])}{'…' if len(s.aliases) > 3 else ''} |"
-                     for s in shown]
-            truncated_note = (f"\nTruncated: showing {per_file_cap} of {len(skills)} skills.\n"
-                              if len(skills) > per_file_cap else "")
+            rows += [
+                f"| {s.skill_id} | {s.name} | {s.status.value} | "
+                f"{', '.join(s.aliases[:3])}{'…' if len(s.aliases) > 3 else ''} |"
+                for s in shown
+            ]
+            truncated_note = (
+                f"\nTruncated: showing {per_file_cap} of {len(skills)} skills.\n" if len(skills) > per_file_cap else ""
+            )
             (d / "SKILL.md").write_text(
                 "---\n"
                 f"name: skills-engine-{tier.value}\n"
-                f"description: \"{len(skills)} {tier.value}-tier skills from the Skills "
-                f"Intelligence Engine taxonomy (version {version})\"\n"
+                f'description: "{len(skills)} {tier.value}-tier skills from the Skills '
+                f'Intelligence Engine taxonomy (version {version})"\n'
                 "---\n\n" + "\n".join(rows) + "\n" + truncated_note,
-                encoding="utf-8")
+                encoding="utf-8",
+            )
             n_files += 1
         return n_files
 
@@ -168,8 +187,9 @@ class SkillsEngine:
         prior_floor = recent_floor - timedelta(days=window_days)
         recent = sum(1 for d in events if recent_floor <= d <= today)
         prior = sum(1 for d in events if prior_floor <= d < recent_floor)
-        trend = ("rising" if recent > prior else "falling" if recent < prior else "flat") \
-            if recent or prior else "untested"
+        trend = (
+            ("rising" if recent > prior else "falling" if recent < prior else "flat") if recent or prior else "untested"
+        )
         row = load_market_signals(self.settings.data_dir / "market_signals.csv").get(skill_id) or {}
         return {
             "skill_id": skill_id,
@@ -187,8 +207,12 @@ class SkillsEngine:
         for s in self.store.skills.values():
             by_tier[s.tier.value] = by_tier.get(s.tier.value, 0) + 1
             by_status[s.status.value] = by_status.get(s.status.value, 0) + 1
-        return {"total_skills": len(self.store.skills), "by_tier": by_tier,
-                "by_status": by_status, "taxonomy_version": self.taxonomy_version()}
+        return {
+            "total_skills": len(self.store.skills),
+            "by_tier": by_tier,
+            "by_status": by_status,
+            "taxonomy_version": self.taxonomy_version(),
+        }
 
     def feedback(self, raw_input: str, accepted: bool) -> dict:
         if self.ranker is None:

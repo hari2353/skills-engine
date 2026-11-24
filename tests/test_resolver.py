@@ -51,4 +51,3 @@ def test_unresolved_has_zero_confidence():
     assert r.skill_id is None
     assert r.method == "none"
     assert r.confidence == 0.0
-

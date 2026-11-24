@@ -6,7 +6,9 @@ from skills_engine.taxonomies.models import Skill, SkillStatus, SkillTier
 
 def make_normalizer(status: SkillStatus = SkillStatus.ACTIVE) -> Normalizer:
     store = TaxonomyStore()
-    store.add_or_update(Skill(skill_id="m1", name="Docker", tier=SkillTier.MASTER, status=status, aliases=["container runtime"]))
+    store.add_or_update(
+        Skill(skill_id="m1", name="Docker", tier=SkillTier.MASTER, status=status, aliases=["container runtime"])
+    )
     return Normalizer(store, HashingEmbedder())
 
 

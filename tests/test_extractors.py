@@ -63,7 +63,7 @@ def test_emit_unknown_surfaces_oov_phrases():
     text = "Works on promptfoo evaluation harnesses and Machine Learning pipelines."
     found = make_extractor().extract(text, ContextType.RESUME, emit_unknown=True)
     assert "Machine Learning" in found
-    unknown = [f for f in found if f != 'Machine Learning']
-    assert any('promptfoo' in u for u in unknown)
+    unknown = [f for f in found if f != "Machine Learning"]
+    assert any("promptfoo" in u for u in unknown)
     plain = make_extractor().extract(text, ContextType.RESUME)
-    assert all('promptfoo' not in p for p in plain)
+    assert all("promptfoo" not in p for p in plain)

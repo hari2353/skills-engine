@@ -12,8 +12,13 @@ def main() -> None:
     parser.add_argument("--data-dir", type=Path, default=None)
     parser.add_argument("--today", type=str, default=None)
     parser.add_argument("--apply", action="store_true", help="apply actions and write a snapshot")
-    parser.add_argument("--export-skills", type=Path, default=None, metavar="OUT_DIR",
-                        help="write one bounded SKILL.md per taxonomy tier (agent registries)")
+    parser.add_argument(
+        "--export-skills",
+        type=Path,
+        default=None,
+        metavar="OUT_DIR",
+        help="write one bounded SKILL.md per taxonomy tier (agent registries)",
+    )
     args = parser.parse_args()
 
     import sys
@@ -35,11 +40,15 @@ def main() -> None:
     actions = runner.report(policy, today)
 
     if not args.apply:
-        print(json.dumps({"today": today.isoformat(), "actions": [a.model_dump(mode="json") for a in actions]}, indent=2))
+        print(
+            json.dumps({"today": today.isoformat(), "actions": [a.model_dump(mode="json") for a in actions]}, indent=2)
+        )
         return
 
     snapshot_dir = runner.apply(actions, policy, today)
-    print(json.dumps({"today": today.isoformat(), "applied": len(actions), "snapshot_dir": str(snapshot_dir)}, indent=2))
+    print(
+        json.dumps({"today": today.isoformat(), "applied": len(actions), "snapshot_dir": str(snapshot_dir)}, indent=2)
+    )
 
 
 if __name__ == "__main__":

@@ -55,7 +55,9 @@ def _existing_surfaces(store) -> set[str]:
     return surfaces
 
 
-def evaluate(store, signals_by_skill: dict[str, SkillSignals], candidates: dict[str, Candidate], policy, today: date) -> list[LifecycleAction]:
+def evaluate(
+    store, signals_by_skill: dict[str, SkillSignals], candidates: dict[str, Candidate], policy, today: date
+) -> list[LifecycleAction]:
     actions: list[LifecycleAction] = []
     existing = _existing_surfaces(store)
 
@@ -76,7 +78,9 @@ def evaluate(store, signals_by_skill: dict[str, SkillSignals], candidates: dict[
                 )
             continue
 
-        if sig is None or (sig.mentions == 0 and sig.market_demand == 0.0 and sig.content_coverage == 0.0 and sig.last_seen is None):
+        if sig is None or (
+            sig.mentions == 0 and sig.market_demand == 0.0 and sig.content_coverage == 0.0 and sig.last_seen is None
+        ):
             continue
 
         score, metrics = health_score(sig, policy, today)

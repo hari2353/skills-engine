@@ -47,7 +47,9 @@ def get_reranker(backend: str = "lexical"):
 class RerankResult:
     __slots__ = ("skill_id", "surface", "tier", "vector_sim", "rerank_score", "blended")
 
-    def __init__(self, skill_id: str, surface: str, tier: str, vector_sim: float, rerank_score: float, vec_weight: float) -> None:
+    def __init__(
+        self, skill_id: str, surface: str, tier: str, vector_sim: float, rerank_score: float, vec_weight: float
+    ) -> None:
         self.skill_id = skill_id
         self.surface = surface
         self.tier = tier

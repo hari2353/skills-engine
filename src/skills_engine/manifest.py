@@ -5,6 +5,7 @@ inputs, outputs and the tools it may call. This module validates and
 normalizes such manifests with no YAML/JSON dependency beyond the standard
 library.
 """
+
 from __future__ import annotations
 
 import re

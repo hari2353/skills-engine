@@ -130,4 +130,3 @@ def create_app(data_dir=None, enable_usage_logging: bool = False) -> FastAPI:
 
 
 app = create_app()
-

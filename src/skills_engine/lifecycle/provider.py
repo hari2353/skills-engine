@@ -100,7 +100,9 @@ def load_market_signals(market_csv: Path) -> dict[str, dict[str, float]]:
     return out
 
 
-def merge_signals(skill_signals: dict[str, SkillSignals], market: dict[str, dict[str, float]], store) -> dict[str, SkillSignals]:
+def merge_signals(
+    skill_signals: dict[str, SkillSignals], market: dict[str, dict[str, float]], store
+) -> dict[str, SkillSignals]:
     merged = dict(skill_signals)
     id_to_key = {}
     for s in store.skills.values():
