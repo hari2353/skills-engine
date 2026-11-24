@@ -1,7 +1,7 @@
 import json
 
 from skills_engine.signals.market import ArbeitnowProvider, posting_text, postings_to_events
-from skills_engine.signals.cli import append_events, update_market_csv, run
+from skills_engine.signals.cli import run
 
 
 def fake_fetch_factory(pages_payload: dict[int, dict]):

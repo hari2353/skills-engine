@@ -204,7 +204,6 @@ def test_normalize_explains_broader_skill(tmp_path):
     eng = _fresh_engine(tmp_path)
     dd = eng.settings.data_dir
     # give Kubernetes (esco__004) a broader parent in the shipped data
-    import re as _re
 
     p = dd / "master_skills.csv"
     rows = p.read_text().splitlines()

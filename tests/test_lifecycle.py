@@ -6,7 +6,6 @@ from skills_engine.embedders.hashing import HashingEmbedder
 from skills_engine.lifecycle.models import Candidate, LifecycleActionType, LifecyclePolicy, SkillSignals
 from skills_engine.lifecycle.policy import evaluate, health_score, recency_weight
 from skills_engine.lifecycle.runner import LifecycleRunner
-from skills_engine.normalization.normalizer import Normalizer
 from skills_engine.taxonomies.loader import TaxonomyStore
 from skills_engine.taxonomies.models import Skill, SkillStatus, SkillTier
 
